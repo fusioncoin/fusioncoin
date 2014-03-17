@@ -1,4 +1,3 @@
 fusioncoin
 ==========
-
-http://fusioncoin.org
+FusionCoin is a hybrid PoW coin using SHA256 and Scrypt. Both are merged minable.
