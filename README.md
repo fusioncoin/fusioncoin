@@ -1,0 +1,4 @@
+fusioncoin
+==========
+
+http://fusioncoin.org
