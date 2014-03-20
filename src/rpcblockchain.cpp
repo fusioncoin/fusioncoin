@@ -94,6 +94,17 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
     if (blockindex->pnext)
         result.push_back(Pair("nextblockhash", blockindex->pnext->GetBlockHash().GetHex()));
+
+    if ( block.isAuxBlock() )
+    {
+        result.push_back(Pair("AuxBlock", ""));
+        result.push_back(Pair("ParentVersion", (boost::uint64_t)block.auxpow.get()->vParentBlockHeader.nVersion));
+        result.push_back(Pair("ParentHashPrev", block.auxpow.get()->vParentBlockHeader.hashPrevBlock.ToString().c_str()));
+        result.push_back(Pair("ParentnBits", HexBits(block.auxpow.get()->vParentBlockHeader.nBits)));
+        result.push_back(Pair("ParentnPow", block.auxpow.get()->GetPoWHash(block.GetAlgo()).GetHex()));
+        result.push_back(Pair("ParentScriptSig", HexStr(block.auxpow.get()->mMerkleTx.vin[0].scriptSig)));
+    }
+
     return result;
 }
 
