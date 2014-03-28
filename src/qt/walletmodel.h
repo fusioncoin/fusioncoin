@@ -11,6 +11,7 @@ class OptionsModel;
 class AddressTableModel;
 class TransactionTableModel;
 class CWallet;
+class CTransaction;
 class CKeyID;
 class CPubKey;
 class COutput;
@@ -66,6 +67,11 @@ public:
     qint64 getBalance(const CCoinControl *coinControl=NULL) const;
     qint64 getUnconfirmedBalance() const;
     qint64 getImmatureBalance() const;
+
+    qint64 getSharedBalance(const CCoinControl *coinControl=NULL) const;
+    qint64 getSharedUnconfirmedBalance() const;
+    qint64 getSharedImmatureBalance() const;
+    
     int getNumTransactions() const;
     EncryptionStatus getEncryptionStatus() const;
 
@@ -86,6 +92,7 @@ public:
 
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(const QList<SendCoinsRecipient> &recipients, const CCoinControl *coinControl=NULL);
+    SendCoinsReturn createRawTransaction(const QList<SendCoinsRecipient> &recipients, CTransaction& txNew, const CCoinControl *coinControl, bool isMultiSig);
 
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
@@ -126,6 +133,7 @@ public:
     void unlockCoin(COutPoint& output);
     void listLockedCoins(std::vector<COutPoint>& vOutpts);
 
+    CWallet *getWallet(){return wallet;}
 private:
     CWallet *wallet;
 
@@ -140,6 +148,11 @@ private:
     qint64 cachedBalance;
     qint64 cachedUnconfirmedBalance;
     qint64 cachedImmatureBalance;
+
+    qint64 cachedSharedBalance;
+    qint64 cachedSharedUnconfirmedBalance;
+    qint64 cachedSharedImmatureBalance;
+    
     qint64 cachedNumTransactions;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
@@ -153,6 +166,7 @@ private:
 signals:
     // Signal that balance in wallet changed
     void balanceChanged(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance);
+    void sharedBalanceChanged(qint64 shared_balance, qint64 shared_unconfirmedBalance, qint64 shared_immatureBalance);
 
     // Number of transactions in wallet changed
     void numTransactionsChanged(int count);
@@ -167,6 +181,8 @@ signals:
 
     // Asynchronous message notification
     void message(const QString &title, const QString &message, unsigned int style);
+
+    void addressBookChanged();
 
 public slots:
     /* Wallet status might have changed */

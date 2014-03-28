@@ -72,6 +72,9 @@ TransactionView::TransactionView(QWidget *parent) :
                                   TransactionFilterProxy::TYPE(TransactionRecord::SendToOther));
     typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
     typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
+    typeWidget->addItem(tr("MultiSig received"), TransactionFilterProxy::TYPE(TransactionRecord::MultiSigRecv));
+    typeWidget->addItem(tr("MultiSig spent"), TransactionFilterProxy::TYPE(TransactionRecord::MultiSigSpent) |
+                                  TransactionFilterProxy::TYPE(TransactionRecord::MultiSigSpentOther));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
 
     hlayout->addWidget(typeWidget);

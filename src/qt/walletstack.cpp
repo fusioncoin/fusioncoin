@@ -96,6 +96,13 @@ void WalletStack::gotoAddressBookPage()
         i.value()->gotoAddressBookPage();
 }
 
+void WalletStack::gotoMultiSigPage()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoMultiSigPage();
+}
+
 void WalletStack::gotoReceiveCoinsPage()
 {
     QMap<QString, WalletView*>::const_iterator i;

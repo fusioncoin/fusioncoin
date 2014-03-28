@@ -114,6 +114,7 @@ OverviewPage::OverviewPage(QWidget *parent) :
 
     // init "out of sync" warning labels
     ui->labelWalletStatus->setText("(" + tr("out of sync") + ")");
+    ui->labelSharedWalletStatus->setText("(" + tr("out of sync") + ")");
     ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
 
     // start with displaying the "out of sync" warnings
@@ -148,6 +149,23 @@ void OverviewPage::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 
     ui->labelImmatureText->setVisible(showImmature);
 }
 
+void OverviewPage::setSharedBalance(qint64 sharedBalance, qint64 sharedUnconfirmedBalance, qint64 sharedImmatureBalance)
+{
+    int unit = walletModel->getOptionsModel()->getDisplayUnit();
+    currentSharedBalance = sharedBalance;
+    currentSharedUnconfirmedBalance = sharedUnconfirmedBalance;
+    currentSharedImmatureBalance = sharedImmatureBalance;
+    ui->labelBalanceShared->setText(BitcoinUnits::formatWithUnit(unit, sharedBalance));
+    ui->labelUnconfirmedShared->setText(BitcoinUnits::formatWithUnit(unit, sharedUnconfirmedBalance));
+    ui->labelImmatureShared->setText(BitcoinUnits::formatWithUnit(unit, sharedImmatureBalance));
+
+    // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
+    // for the non-mining users
+    bool showImmature = sharedImmatureBalance != 0;
+    ui->labelImmatureShared->setVisible(showImmature);
+    ui->labelImmatureTextShared->setVisible(showImmature);
+}
+
 void OverviewPage::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
@@ -177,7 +195,9 @@ void OverviewPage::setWalletModel(WalletModel *model)
 
         // Keep up to date with wallet
         setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance());
+        setSharedBalance(model->getSharedBalance(), model->getSharedUnconfirmedBalance(), model->getSharedImmatureBalance());
         connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64)));
+        connect(model, SIGNAL(sharedBalanceChanged(qint64, qint64, qint64)), this, SLOT(setSharedBalance(qint64, qint64, qint64)));
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
     }
@@ -191,7 +211,10 @@ void OverviewPage::updateDisplayUnit()
     if(walletModel && walletModel->getOptionsModel())
     {
         if(currentBalance != -1)
+        {
             setBalance(currentBalance, currentUnconfirmedBalance, currentImmatureBalance);
+            setSharedBalance(currentSharedBalance, currentSharedUnconfirmedBalance, currentSharedImmatureBalance);
+        }
 
         // Update txdelegate->unit with the current unit
         txdelegate->unit = walletModel->getOptionsModel()->getDisplayUnit();
@@ -209,5 +232,6 @@ void OverviewPage::updateAlerts(const QString &warnings)
 void OverviewPage::showOutOfSyncWarning(bool fShow)
 {
     ui->labelWalletStatus->setVisible(fShow);
+    ui->labelSharedWalletStatus->setVisible(fShow);
     ui->labelTransactionsStatus->setVisible(fShow);
 }

@@ -30,6 +30,7 @@ public:
 
 public slots:
     void setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance);
+    void setSharedBalance(qint64 sharedBalance, qint64 sharedUnconfirmedBalance, qint64 sharedImmatureBalance);
 
 signals:
     void transactionClicked(const QModelIndex &index);
@@ -41,6 +42,10 @@ private:
     qint64 currentBalance;
     qint64 currentUnconfirmedBalance;
     qint64 currentImmatureBalance;
+    
+    qint64 currentSharedBalance;
+    qint64 currentSharedUnconfirmedBalance;
+    qint64 currentSharedImmatureBalance;
 
     TxViewDelegate *txdelegate;
     TransactionFilterProxy *filter;

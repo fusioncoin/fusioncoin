@@ -12,10 +12,23 @@
 #include "qrcodedialog.h"
 #endif
 
+#include "createmultisigaddrdialog.h"
+
+#include "wallet.h"
+#include "walletmodel.h"
+#include "init.h"
+#include "base58.h"
+#include "bitcoinrpc.h"
+using namespace json_spirit;
+
 #include <QSortFilterProxyModel>
 #include <QClipboard>
 #include <QMessageBox>
 #include <QMenu>
+#include <QTextDocument>
+#include <QScrollBar>
+#include <QFile>
+#include <QTextStream>
 
 AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     QDialog(parent),
@@ -63,6 +76,7 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
         ui->labelExplanation->setText(tr("These are your Fusioncoin addresses for receiving payments. You may want to give a different one to each sender so you can keep track of who is paying you."));
         ui->deleteAddress->setVisible(false);
         ui->signMessage->setVisible(true);
+        ui->newMultiSigAddress->setVisible(false);
         break;
     }
 
@@ -74,6 +88,7 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     QAction *showQRCodeAction = new QAction(ui->showQRCode->text(), this);
     QAction *signMessageAction = new QAction(ui->signMessage->text(), this);
     QAction *verifyMessageAction = new QAction(ui->verifyMessage->text(), this);
+    QAction *copyPubKeyAction = new QAction(tr("Copy &Public Key"), this);
     deleteAction = new QAction(ui->deleteAddress->text(), this);
 
     // Build context menu
@@ -90,9 +105,25 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     contextMenu->addAction(showQRCodeAction);
 #endif
     if(tab == ReceivingTab)
+    {
         contextMenu->addAction(signMessageAction);
+        contextMenu->addAction(copyPubKeyAction);
+    }
     else if(tab == SendingTab)
         contextMenu->addAction(verifyMessageAction);
+
+    QAction *MultiSigExportAction = new QAction(tr("Export MultiSig Address"), this);
+    contextMenuMultiSig = new QMenu();
+    contextMenuMultiSig->addAction(copyAddressAction);
+    contextMenuMultiSig->addAction(copyLabelAction);
+    contextMenuMultiSig->addAction(editAction);
+    contextMenuMultiSig->addAction(deleteAction);
+    contextMenuMultiSig->addSeparator();
+    contextMenuMultiSig->addAction(sendCoinsAction);
+#ifdef USE_QRCODE
+    contextMenuMultiSig->addAction(showQRCodeAction);
+#endif
+    contextMenuMultiSig->addAction(MultiSigExportAction);
 
     // Connect signals for context menu actions
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(on_copyAddress_clicked()));
@@ -108,6 +139,10 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
 
     // Pass through accept action from button box
     connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+
+    connect(MultiSigExportAction, SIGNAL(triggered()), this, SLOT(exportAddress()));
+    connect(ui->newMultiSigAddress, SIGNAL(clicked()), this, SLOT(createAddress()));
+    connect(copyPubKeyAction, SIGNAL(triggered()), this, SLOT(on_copyPubKey_clicked()));
 }
 
 AddressBookPage::~AddressBookPage()
@@ -168,6 +203,33 @@ void AddressBookPage::setOptionsModel(OptionsModel *optionsModel)
 void AddressBookPage::on_copyAddress_clicked()
 {
     GUIUtil::copyEntryData(ui->tableView, AddressTableModel::Address);
+}
+
+void AddressBookPage::on_copyPubKey_clicked()
+{
+    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows(AddressTableModel::Address);
+    if(!selection.isEmpty())
+    {
+        QString addrStr = selection.at(0).data(Qt::EditRole).toString();
+        CBitcoinAddress address(addrStr.toStdString());
+        CKeyID keyID;
+        if ( !address.GetKeyID(keyID) )
+        {
+            QMessageBox::warning(this, windowTitle(),
+                tr("Address \"%1\" doesn't have public key ").arg(addrStr),
+                QMessageBox::Ok, QMessageBox::Ok);
+            return;
+        }
+        CPubKey vchPubKey;
+        if ( !pwalletMain->GetPubKey(keyID, vchPubKey))
+        {
+            QMessageBox::warning(this, windowTitle(),
+                tr("Address \"%1\" doesn't have public key ").arg(addrStr),
+                QMessageBox::Ok, QMessageBox::Ok);
+            return;
+        }
+        GUIUtil::setClipboard(QString::fromStdString(HexStr(vchPubKey)));
+    }
 }
 
 void AddressBookPage::onCopyLabelAction()
@@ -378,7 +440,18 @@ void AddressBookPage::contextualMenu(const QPoint &point)
     QModelIndex index = ui->tableView->indexAt(point);
     if(index.isValid())
     {
-        contextMenu->exec(QCursor::pos());
+        QTableView *table = ui->tableView;
+        QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Category);
+
+        foreach (QModelIndex index1, indexes){
+            QString Category = index1.data().toString();
+            if ( Category == "MultiSig" )
+                contextMenuMultiSig->exec(QCursor::pos());
+            else
+                contextMenu->exec(QCursor::pos());
+
+            break;
+        }
     }
 }
 
@@ -393,3 +466,50 @@ void AddressBookPage::selectNewAddress(const QModelIndex &parent, int begin, int
         newAddressToSelect.clear();
     }
 }
+
+bool writeString(const QString &filename, const QString& hex);
+void AddressBookPage::exportAddress()
+{
+    QString s;
+    QTableView *table = ui->tableView;
+    QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
+
+    //foreach (QModelIndex index, indexes)
+    s = indexes[0].data().toString();
+
+    CBitcoinAddress address(s.toStdString());
+    
+    CScript subscript;
+    CScriptID scriptID;
+    address.GetScriptID(scriptID);
+    pwalletMain->GetCScript(scriptID, subscript);
+
+    json_spirit::Object addrJson;
+    addrJson.push_back(json_spirit::Pair("address", address.ToString()));
+    addrJson.push_back(json_spirit::Pair("redeemScript", HexStr(subscript.begin(), subscript.end())));
+    std::string ss = json_spirit::write_string(json_spirit::Value(addrJson), false);
+    QString addrJsonStr = QString::fromStdString(ss);
+
+    QString filename = GUIUtil::getSaveFileName(
+            this,
+            tr("Save MultiSig Address"), QString(),
+            tr("MultiSig Address file (*.fma)"));
+
+    if (filename.isNull()) return;
+
+    if(!writeString(filename, addrJsonStr))
+    {
+        QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
+                              QMessageBox::Abort, QMessageBox::Abort);
+    }
+}
+
+void AddressBookPage::createAddress()
+{
+    CreateMultiSigAddrDialog dlg(this);
+    if(dlg.exec())
+    {
+    }
+}
+
+

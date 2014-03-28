@@ -18,13 +18,20 @@ struct AddressTableEntry
         Receiving
     };
 
+    enum Category {
+        Normal,
+        MultiSig
+    };
+
     Type type;
     QString label;
     QString address;
+    Category category;
+    QStringList categoryStrList;
 
-    AddressTableEntry() {}
-    AddressTableEntry(Type type, const QString &label, const QString &address):
-        type(type), label(label), address(address) {}
+    AddressTableEntry() { categoryStrList << "Normal" << "MultiSig"; }
+    AddressTableEntry(Type type, const QString &label, const QString &address, Category cate = Normal):
+        type(type), label(label), address(address), category(cate) { categoryStrList << "Normal" << "MultiSig"; }
 };
 
 struct AddressTableEntryLessThan
@@ -64,9 +71,18 @@ public:
                 const CBitcoinAddress& address = item.first;
                 const std::string& strName = item.second;
                 bool fMine = IsMine(*wallet, address.Get());
-                cachedAddressTable.append(AddressTableEntry(fMine ? AddressTableEntry::Receiving : AddressTableEntry::Sending,
+                bool fMyShare = IsMyShare(*wallet, address.Get());
+                AddressTableEntry::Type type = fMine ? AddressTableEntry::Receiving : AddressTableEntry::Sending;
+                AddressTableEntry::Category cate = AddressTableEntry::Normal;
+                if ( fMyShare )
+                {
+                    cate = AddressTableEntry::MultiSig;
+                    type = AddressTableEntry::Sending;
+                }
+
+                cachedAddressTable.append(AddressTableEntry(type,
                                   QString::fromStdString(strName),
-                                  QString::fromStdString(address.ToString())));
+                                  QString::fromStdString(address.ToString()), cate));
             }
         }
         // qLowerBound() and qUpperBound() require our cachedAddressTable list to be sorted in asc order
@@ -93,9 +109,14 @@ public:
                 OutputDebugStringF("Warning: AddressTablePriv::updateEntry: Got CT_NOW, but entry is already in model\n");
                 break;
             }
-            parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedAddressTable.insert(lowerIndex, AddressTableEntry(newEntryType, label, address));
-            parent->endInsertRows();
+            {
+                CBitcoinAddress addr(address.toStdString());
+                AddressTableEntry::Category cate = IsMyShare(*wallet, addr.Get()) ? AddressTableEntry::MultiSig : AddressTableEntry::Normal;
+
+                parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
+                cachedAddressTable.insert(lowerIndex, AddressTableEntry(newEntryType, label, address, cate));
+                parent->endInsertRows();
+            }
             break;
         case CT_UPDATED:
             if(!inModel)
@@ -141,7 +162,7 @@ public:
 AddressTableModel::AddressTableModel(CWallet *wallet, WalletModel *parent) :
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0)
 {
-    columns << tr("Label") << tr("Address");
+    columns << tr("Label") << tr("Address") << tr("Category");
     priv = new AddressTablePriv(wallet, this);
     priv->refreshAddressTable();
 }
@@ -185,6 +206,8 @@ QVariant AddressTableModel::data(const QModelIndex &index, int role) const
             }
         case Address:
             return rec->address;
+        case Category:
+            return rec->categoryStrList[rec->category];
         }
     }
     else if (role == Qt::FontRole)

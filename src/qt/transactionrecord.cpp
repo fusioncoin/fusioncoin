@@ -31,6 +31,90 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
 
+    // MultiSig
+    bool fAllFromMyShare = true;
+    int64 nShareDebit = 0;
+    BOOST_FOREACH(const CTxIn& txin, wtx.vin){
+        if ( wallet->IsMyShare(txin) )
+            nShareDebit += wallet->GetShareDebit(txin);
+        else 
+            fAllFromMyShare = false;
+    }
+
+    bool fAllToMyShare = true;
+    int64 nShareCredit = 0;
+    BOOST_FOREACH(const CTxOut& txout, wtx.vout){
+        if ( wallet->IsMyShare(txout) )
+            nShareCredit += txout.nValue;
+        else 
+            fAllToMyShare = false;
+    }
+
+    int64 nShareNet = nShareCredit - nShareDebit;
+    if ( nShareNet > 0 )
+    {
+        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+        {
+            if ( wallet->IsMyShare(txout) )
+            {
+                CTxDestination shareAddress;
+                ExtractDestination(txout.scriptPubKey, shareAddress);
+                TransactionRecord sub(hash, nTime);
+                sub.idx = parts.size();
+                sub.type = TransactionRecord::MultiSigRecv;
+                sub.address = CBitcoinAddress(shareAddress).ToString();
+                sub.credit = nShareCredit;
+                parts.append(sub);
+            }
+        }
+    }
+    else
+    {
+        if ( fAllFromMyShare )
+        {
+            int64 nTxFee = nDebit - wtx.GetValueOut();
+            for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
+            {
+                const CTxOut& txout = wtx.vout[nOut];
+
+                if(wallet->IsMyShare(txout))
+                {
+                    // Ignore parts sent to self, as this is usually the change
+                    // from a transaction sent back to our own address.
+                    continue;
+                }
+
+                TransactionRecord sub(hash, nTime);
+                sub.idx = parts.size();
+                CTxDestination address;
+                if (ExtractDestination(txout.scriptPubKey, address))
+                {
+                    sub.type = TransactionRecord::MultiSigSpent;
+                    // Sent to Bitcoin Address
+                    sub.address = CBitcoinAddress(address).ToString();
+                }
+                else
+                {
+                    sub.type = TransactionRecord::MultiSigSpentOther;
+                    // Sent to IP, or other non-address transaction like OP_EVAL
+                    sub.address = mapValue["to"];
+                }
+
+                int64 nValue = txout.nValue;
+                /* Add fee to first output */
+                if (nTxFee > 0)
+                {
+                    nValue += nTxFee;
+                    nTxFee = 0;
+                }
+                sub.debit = -nValue;
+
+                parts.append(sub);
+            }
+        }
+    }
+    // MultiSig end
+
     if (nNet > 0 || wtx.IsCoinBase())
     {
         //
@@ -130,7 +214,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 parts.append(sub);
             }
         }
-        else
+        else if ( nShareCredit == 0 && nShareDebit == 0)
         {
             //
             // Mixed debit transaction, can't break down payees

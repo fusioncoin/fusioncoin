@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>760</width>
+    <width>809</width>
     <height>380</height>
    </rect>
   </property>
@@ -61,6 +61,17 @@
        </property>
        <property name="text">
         <string>&amp;New Address</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../bitcoin.qrc">
+         <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="newMultiSigAddress">
+       <property name="text">
+        <string>New MultiSig</string>
        </property>
        <property name="icon">
         <iconset resource="../bitcoin.qrc">
