@@ -188,6 +188,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     continue;
                 }
 
+                if ( 0 == txout.nValue )
+                    continue;
+
                 CTxDestination address;
                 if (ExtractDestination(txout.scriptPubKey, address))
                 {

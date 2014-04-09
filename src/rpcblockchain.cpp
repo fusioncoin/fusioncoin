@@ -103,6 +103,7 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
         result.push_back(Pair("ParentnBits", HexBits(block.auxpow.get()->vParentBlockHeader.nBits)));
         result.push_back(Pair("ParentnPow", block.auxpow.get()->GetPoWHash(block.GetAlgo()).GetHex()));
         result.push_back(Pair("ParentScriptSig", HexStr(block.auxpow.get()->mMerkleTx.vin[0].scriptSig)));
+        result.push_back(Pair("ParentSize", (int)::GetSerializeSize(*block.auxpow.get(), SER_NETWORK, PROTOCOL_VERSION)));
     }
 
     return result;

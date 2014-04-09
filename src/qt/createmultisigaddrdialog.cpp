@@ -223,7 +223,8 @@ void CreateMultiSigAddrDialog::importAddress()
     std::vector<unsigned char> scriptData(ParseHex(scriptV.get_str()));
     CScript scriptPubKey(scriptData.begin(), scriptData.end());
 
-    if (!IsStandard(scriptPubKey))
+    txnouttype whichType;
+    if (!IsStandard(scriptPubKey, whichType))
         return;
 
     //if ( !scriptPubKey.IsPayToScriptHash())
