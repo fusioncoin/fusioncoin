@@ -158,7 +158,12 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 
         bool fAllToMe = true;
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
+        {
+            if ( 0 == txout.nValue )
+                continue;
+
             fAllToMe = fAllToMe && wallet->IsMine(txout);
+        }
 
         if (fAllFromMe && fAllToMe)
         {

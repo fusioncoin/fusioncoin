@@ -10,6 +10,7 @@
 #include "init.h"
 #include "util.h"
 #include "ui_interface.h"
+#include "smalldata.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -114,6 +115,7 @@ void Shutdown()
         bitdb.Flush(false);
     GenerateBitcoins(false, NULL);
     StopNode();
+    adManager.save();
     {
         LOCK(cs_main);
         if (pwalletMain)
@@ -431,6 +433,7 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
         printf("Reindexing finished\n");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
         InitBlockIndex();
+        adManager.load();
     }
 
     // hardcoded $DATADIR/bootstrap.dat
@@ -923,14 +926,26 @@ bool AppInit2(boost::thread_group& threadGroup)
                 if (!mapBlockIndex.empty() && pindexGenesisBlock == NULL)
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
 
+                #if !defined(QT_GUI)
+                fAdEnabled = GetBoolArg("-enableAD", false);
+                #else
+                fAdEnabled = GetBoolArg("-enableAD", true);
+                #endif
+
                 // Initialize the block index (no-op if non-empty database was already loaded)
                 if (!InitBlockIndex()) {
                     strLoadError = _("Error initializing block database");
                     break;
                 }
 
+                bool isTxIndex = GetBoolArg("-txindex", false);
+
+                // AdEnabled need txindex
+                if ( fAdEnabled )
+                    isTxIndex = true;
+
                 // Check for changed -txindex state
-                if (fTxIndex != GetBoolArg("-txindex", false)) {
+                if (fTxIndex != isTxIndex) {
                     strLoadError = _("You need to rebuild the database using -reindex to change -txindex");
                     break;
                 }
@@ -1129,6 +1144,9 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     printf("Loaded %i addresses from peers.dat  %"PRI64d"ms\n",
            addrman.size(), GetTimeMillis() - nStart);
+
+    // ********************************************************* Step 10.1: load extra data
+    adManager.load();
 
     // ********************************************************* Step 11: start node
 

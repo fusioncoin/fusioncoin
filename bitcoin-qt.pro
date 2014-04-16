@@ -149,6 +149,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/aboutdialog.h \
     src/qt/editaddressdialog.h \
     src/qt/createmultisigaddrdialog.h \
+    src/qt/advertisedialog.h \
     src/qt/bitcoinaddressvalidator.h \
     src/alert.h \
     src/auxpow.h \
@@ -173,6 +174,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/bloom.h \
     src/mruset.h \
     src/checkqueue.h \
+    src/smalldata.h \
     src/json/json_spirit_writer_template.h \
     src/json/json_spirit_writer.h \
     src/json/json_spirit_value.h \
@@ -239,6 +241,7 @@ SOURCES += src/qt/bitcoin.cpp \
     src/qt/aboutdialog.cpp \
     src/qt/editaddressdialog.cpp \
     src/qt/createmultisigaddrdialog.cpp \
+    src/qt/advertisedialog.cpp \
     src/qt/bitcoinaddressvalidator.cpp \
     src/alert.cpp \
     src/auxpow.cpp \
@@ -257,6 +260,7 @@ SOURCES += src/qt/bitcoin.cpp \
     src/addrman.cpp \
     src/db.cpp \
     src/walletdb.cpp \
+    src/smalldata.cpp \
     src/qt/clientmodel.cpp \
     src/qt/guiutil.cpp \
     src/qt/transactionrecord.cpp \
@@ -309,6 +313,7 @@ FORMS += src/qt/forms/sendcoinsdialog.ui \
     src/qt/forms/aboutdialog.ui \
     src/qt/forms/editaddressdialog.ui \
     src/qt/forms/createmultisigaddrdialog.ui \
+    src/qt/forms/advertisedialog.ui \
     src/qt/forms/transactiondescdialog.ui \
     src/qt/forms/overviewpage.ui \
     src/qt/forms/sendcoinsentry.ui \

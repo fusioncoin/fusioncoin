@@ -91,7 +91,7 @@ public:
     };
 
     // Send coins to a list of recipients
-    SendCoinsReturn sendCoins(const QList<SendCoinsRecipient> &recipients, const CCoinControl *coinControl=NULL);
+    SendCoinsReturn sendCoins(const QList<SendCoinsRecipient> &recipients, QString &txmessage, const CCoinControl *coinControl=NULL);
     SendCoinsReturn createRawTransaction(const QList<SendCoinsRecipient> &recipients, CTransaction& txNew, const CCoinControl *coinControl, bool isMultiSig);
 
     // Wallet encryption

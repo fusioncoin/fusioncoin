@@ -9,9 +9,19 @@
 #include "transactionfilterproxy.h"
 #include "guiutil.h"
 #include "guiconstants.h"
+#include "bitcoinrpc.h"
+#include "init.h"
+#include "main.h"
+#include "base58.h"
+#include "smalldata.h"
 
+#include "advertisedialog.h"
 #include <QAbstractItemDelegate>
 #include <QPainter>
+#include <QStandardItemModel>
+#include <QPalette>
+
+using namespace json_spirit;
 
 #define DECORATION_SIZE 64
 #define NUM_ITEMS 3
@@ -111,6 +121,38 @@ OverviewPage::OverviewPage(QWidget *parent) :
     ui->listTransactions->setAttribute(Qt::WA_MacShowFocusRect, false);
 
     connect(ui->listTransactions, SIGNAL(clicked(QModelIndex)), this, SLOT(handleTransactionClicked(QModelIndex)));
+
+    QPalette Pal(palette());
+    Pal.setColor(QPalette::Background, QColor(200,200,200));
+    ui->frameAd->setAutoFillBackground(true);
+    ui->frameAd->setPalette(Pal);
+
+    labelRankArray[0] = ui->labelRank0;labelRankArray[1] = ui->labelRank1;labelRankArray[2] = ui->labelRank2;labelRankArray[3] = ui->labelRank3;
+    labelRankArray[4] = ui->labelRank4;labelRankArray[5] = ui->labelRank5;labelRankArray[6] = ui->labelRank6;labelRankArray[7] = ui->labelRank7;
+    labelRankArray[8] = ui->labelRank8;labelRankArray[9] = ui->labelRank9;labelRankArray[10] = ui->labelRank10;labelRankArray[11] = ui->labelRank11;
+    labelRankArray[12] = ui->labelRank12;labelRankArray[13] = ui->labelRank13;labelRankArray[14] = ui->labelRank14;labelRankArray[15] = ui->labelRank15;
+
+    labelMsgArray[0] = ui->labelAd0;labelMsgArray[1] = ui->labelAd1;labelMsgArray[2] = ui->labelAd2;labelMsgArray[3] = ui->labelAd3;
+    labelMsgArray[4] = ui->labelAd4;labelMsgArray[5] = ui->labelAd5;labelMsgArray[6] = ui->labelAd6;labelMsgArray[7] = ui->labelAd7;
+    labelMsgArray[8] = ui->labelAd8;labelMsgArray[9] = ui->labelAd9;labelMsgArray[10] = ui->labelAd10;labelMsgArray[11] = ui->labelAd11;
+    labelMsgArray[12] = ui->labelAd12;labelMsgArray[13] = ui->labelAd13;labelMsgArray[14] = ui->labelAd14;labelMsgArray[15] = ui->labelAd15;
+
+    labelFeeArray[0] = ui->labelFee0;labelFeeArray[1] = ui->labelFee1;labelFeeArray[2] = ui->labelFee2;labelFeeArray[3] = ui->labelFee3;
+    labelFeeArray[4] = ui->labelFee4;labelFeeArray[5] = ui->labelFee5;labelFeeArray[6] = ui->labelFee6;labelFeeArray[7] = ui->labelFee7;
+    labelFeeArray[8] = ui->labelFee8;labelFeeArray[9] = ui->labelFee9;labelFeeArray[10] = ui->labelFee10;labelFeeArray[11] = ui->labelFee11;
+    labelFeeArray[12] = ui->labelFee12;labelFeeArray[13] = ui->labelFee13;labelFeeArray[14] = ui->labelFee14;labelFeeArray[15] = ui->labelFee15;
+
+    Pal.setColor(QPalette::Background, QColor(210,210,210));
+    for ( int i = 0; i < 16; i += 2 )
+    {
+        labelRankArray[i+1]->setAutoFillBackground(true);
+        labelRankArray[i+1]->setPalette(Pal);
+        labelMsgArray[i+1]->setAutoFillBackground(true);
+        labelMsgArray[i+1]->setPalette(Pal);
+        labelFeeArray[i+1]->setAutoFillBackground(true);
+        labelFeeArray[i+1]->setPalette(Pal);
+    }
+    connect(ui->btnAddAD, SIGNAL(clicked()), this, SLOT(addAdvertisement()));
 
     // init "out of sync" warning labels
     ui->labelWalletStatus->setText("(" + tr("out of sync") + ")");
@@ -234,4 +276,39 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
     ui->labelWalletStatus->setVisible(fShow);
     ui->labelSharedWalletStatus->setVisible(fShow);
     ui->labelTransactionsStatus->setVisible(fShow);
+    updateAdvertisement();
 }
+
+void OverviewPage::addAdvertisement()
+{
+    AdvertiseDialog dlg(this);
+    dlg.setModel(walletModel);
+    if(dlg.exec())
+    {
+    }
+}
+
+void OverviewPage::updateAdvertisement()
+{
+    adManager.load();
+    std::vector<CAdTx> adTxList;
+    adManager.getAdList(adTxList);
+
+    int i;
+    for ( i = 0; i < 15; ++ i )
+    {
+        if ( i < adTxList.size() )
+        {
+            labelMsgArray[i + 1]->setText(QString::fromStdString(adTxList[i].adText));
+            labelFeeArray[i + 1]->setText(QString::number((double)adTxList[i].nFee / COIN, 'f', 4));
+            labelRankArray[i + 1]->setText(QString::number(nBestHeight - adTxList[i].nHeight));
+        }
+        else
+        {
+            labelMsgArray[i + 1]->setText("");
+            labelFeeArray[i + 1]->setText("");
+            labelRankArray[i + 1]->setText("");
+        }
+    }
+}
+

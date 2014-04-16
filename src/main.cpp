@@ -14,6 +14,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include "smalldata.h"
 
 using namespace std;
 using namespace boost;
@@ -2350,6 +2351,8 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     if (!pblock->AcceptBlock(state, dbp))
         return error("ProcessBlock() : AcceptBlock FAILED");
 
+    adManager.processBlock(pblock);
+
     // Recursively process any orphan blocks that depended on this one
     vector<uint256> vWorkQueue;
     vWorkQueue.push_back(hash);
@@ -2789,6 +2792,10 @@ bool InitBlockIndex() {
 
     // Use the provided setting for -txindex in the new database
     fTxIndex = GetBoolArg("-txindex", false);
+    // AdEnabled need txindex
+    if ( fAdEnabled )
+        fTxIndex = true;
+    
     pblocktree->WriteFlag("txindex", fTxIndex);
     printf("Initializing databases...\n");
 
@@ -4612,7 +4619,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     }
 
     //// debug print
-    printf("LitecoinMiner:\n");
+    printf("Fusioncoin Miner:\n");
     printf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex().c_str(), hashTarget.GetHex().c_str());
     pblock->print();
     printf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue).c_str());

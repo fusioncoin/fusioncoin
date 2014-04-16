@@ -122,7 +122,6 @@ OBJS= \
     obj/db.o \
     obj/init.o \
     obj/keystore.o \
-    obj/auxpow.o \
     obj/main.o \
     obj/net.o \
     obj/protocol.o \
@@ -143,8 +142,9 @@ OBJS= \
     obj/bloom.o \
     obj/noui.o \
     obj/leveldb.o \
-    obj/txdb.o 
-
+    obj/txdb.o \
+    obj/auxpow.o \
+    obj/smalldata.o
 
 ifdef USE_SSE2
 DEFS += -DUSE_SSE2

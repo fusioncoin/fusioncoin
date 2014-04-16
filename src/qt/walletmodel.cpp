@@ -8,7 +8,7 @@
 #include "wallet.h"
 #include "walletdb.h" // for BackupWallet
 #include "base58.h"
-
+#include "smalldata.h"
 #include <QSet>
 #include <QTimer>
 
@@ -177,7 +177,7 @@ bool WalletModel::validateAddress(const QString &address)
     return addressParsed.IsValid();
 }
 
-WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipient> &recipients, const CCoinControl *coinControl)
+WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipient> &recipients, QString &txmessage, const CCoinControl *coinControl)
 {
     qint64 total = 0;
     QSet<QString> setAddress;
@@ -231,6 +231,22 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
             CScript scriptPubKey;
             scriptPubKey.SetDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
             vecSend.push_back(make_pair(scriptPubKey, rcp.amount));
+        }
+
+        if ( txmessage.length() )
+        {
+            const char* msg = txmessage.toStdString().c_str();
+            CScript scriptMsg;
+            const unsigned char *msgHeader = GetSmallDataHeader(SMALLDATA_TYPE_PLAINTEXT);
+            std::vector<unsigned char> vMsg;
+            int i;
+            for ( i = 0; i < 4; ++ i )
+                vMsg.push_back(msgHeader[i]);
+            for ( i = 0; i < std::strlen(msg); ++ i )
+                vMsg.push_back(msg[i]);
+
+            scriptMsg << OP_RETURN << vMsg;
+            vecSend.push_back(make_pair(scriptMsg, 0));
         }
 
         CWalletTx wtx;
@@ -345,7 +361,8 @@ WalletModel::SendCoinsReturn WalletModel::createRawTransaction(
 
         int64 nFeeRequired = 0;
         std::string strFailReason;
-        bool fCreated = wallet->CreateRawTransaction(vecSend, txNew, nFeeRequired, strFailReason, coinControl);
+        CReserveKey reservekey(wallet);
+        bool fCreated = wallet->CreateRawTransaction(vecSend, txNew, nFeeRequired, strFailReason, isMultiSig, reservekey, coinControl);
 
         if(!fCreated)
         {

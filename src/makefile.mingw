@@ -28,14 +28,14 @@ INCLUDEPATHS= \
  -I"$(DEPSDIR)/include" \
  -I"E:/MinGW/boost_1_55_0" \
  -I"E:/MinGW/db-4.8.30.NC/build_unix" \
- -I"E:/MinGW/openssl-1.0.1e/include"
+ -I"E:/MinGW/openssl-1.0.1g/include"
 
 LIBPATHS= \
  -L"$(CURDIR)/leveldb" \
  -L"$(DEPSDIR)/lib" \
  -L"E:/MinGW/boost_1_55_0/stage/lib" \
  -L"E:/MinGW/db-4.8.30.NC/build_unix" \
- -L"E:/MinGW/openssl-1.0.1e"
+ -L"E:/MinGW/openssl-1.0.1g"
  
 LIBS= \
  -l leveldb \
@@ -108,7 +108,8 @@ OBJS= \
     obj/noui.o \
     obj/leveldb.o \
     obj/txdb.o \
-    obj/auxpow.o
+    obj/auxpow.o \
+    obj/smalldata.o
 
 ifdef USE_SSE2
 DEFS += -DUSE_SSE2

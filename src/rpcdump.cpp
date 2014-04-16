@@ -6,6 +6,7 @@
 #include "bitcoinrpc.h"
 #include "ui_interface.h"
 #include "base58.h"
+#include "smalldata.h"
 
 #include <boost/lexical_cast.hpp>
 
@@ -94,3 +95,33 @@ Value dumpprivkey(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
     return CBitcoinSecret(vchSecret).ToString();
 }
+
+json_spirit::Value getadlist(const json_spirit::Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getadlist\n"
+            "Return the list of advertisemet.");
+
+    adManager.load();
+    std::vector<CAdTx> adTxList;
+    adManager.getAdList(adTxList);
+    
+    Array txs;
+    for ( int i = 0; i < adTxList.size(); ++ i )
+    {
+        Object result;
+        if ( 0 == adTxList[i].nHeight )
+            result.push_back(Pair("tx", 0));
+        else
+            result.push_back(Pair("tx", adTxList[i].GetHash().GetHex()));
+
+        result.push_back(Pair("text", adTxList[i].adText));
+        result.push_back(Pair("fee", ValueFromAmount(adTxList[i].GetFeeCur())));
+        
+        txs.push_back(result);
+    }
+    
+    return txs;
+}
+

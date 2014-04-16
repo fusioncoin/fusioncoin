@@ -13,6 +13,7 @@ class TransactionFilterProxy;
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
+class QLabel;
 QT_END_NAMESPACE
 
 /** Overview ("home") page widget */
@@ -47,13 +48,19 @@ private:
     qint64 currentSharedUnconfirmedBalance;
     qint64 currentSharedImmatureBalance;
 
+    QLabel *labelRankArray[16];
+    QLabel *labelMsgArray[16];
+    QLabel *labelFeeArray[16];
+
     TxViewDelegate *txdelegate;
     TransactionFilterProxy *filter;
+    void updateAdvertisement();
 
 private slots:
     void updateDisplayUnit();
     void handleTransactionClicked(const QModelIndex &index);
     void updateAlerts(const QString &warnings);
+    void addAdvertisement();
 };
 
 #endif // OVERVIEWPAGE_H

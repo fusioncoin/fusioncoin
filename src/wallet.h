@@ -314,8 +314,8 @@ public:
      */
     boost::signals2::signal<void (CWallet *wallet, const uint256 &hashTx, ChangeType status)> NotifyTransactionChanged;
 
-    bool CreateRawTransaction(const std::vector<std::pair<CScript, int64> >& vecSend,
-                           CTransaction& txNew, int64& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl=NULL);
+    bool CreateRawTransaction(const std::vector<std::pair<CScript, int64> >& vecSend, CTransaction& txNew, 
+        int64& nFeeRet, std::string& strFailReason, bool isMultiSig, CReserveKey& reservekey, const CCoinControl *coinControl=NULL);
 
     /* 
      *  for shared wallet

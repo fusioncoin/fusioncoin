@@ -1834,8 +1834,8 @@ bool CWallet::SelectSharedCoins(int64 nTargetValue, set<pair<const CWalletTx*,un
             SelectCoinsMinConf(nTargetValue, 0, 1, vCoins, setCoinsRet, nValueRet));
 }
 
-bool CWallet::CreateRawTransaction(const std::vector<std::pair<CScript, int64> >& vecSend,
-                       CTransaction& txNew, int64& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl)
+bool CWallet::CreateRawTransaction(const std::vector<std::pair<CScript, int64> >& vecSend, CTransaction& txNew, 
+    int64& nFeeRet, std::string& strFailReason, bool isMultiSig, CReserveKey& reservekey, const CCoinControl *coinControl)
 {
     int64 nValue = 0;
     BOOST_FOREACH (const PAIRTYPE(CScript, int64)& s, vecSend)
@@ -1853,7 +1853,7 @@ bool CWallet::CreateRawTransaction(const std::vector<std::pair<CScript, int64> >
         return false;
     }
 
-    int64 nTotalValue = nValue;// + nFeeRet;
+    int64 nTotalValue = nValue + nFeeRet;
     CTransaction rawTx;
 
     // vouts to the payees
@@ -1871,10 +1871,21 @@ bool CWallet::CreateRawTransaction(const std::vector<std::pair<CScript, int64> >
     // Choose coins to use
     set<pair<const CWalletTx*,unsigned int> > setCoins;
     int64 nValueIn = 0;
-    if (!SelectSharedCoins(nTotalValue, setCoins, nValueIn, coinControl))
+    if ( isMultiSig )
     {
-        strFailReason = _("Insufficient funds");
-        return false;
+        if (!SelectSharedCoins(nTotalValue, setCoins, nValueIn, coinControl))
+        {
+            strFailReason = _("Insufficient funds");
+            return false;
+        }
+    }
+    else
+    {
+        if (!SelectCoins(nTotalValue, setCoins, nValueIn, coinControl))
+        {
+            strFailReason = _("Insufficient funds");
+            return false;
+        }
     }
 
     int64 nChange = nValueIn - nTotalValue;
@@ -1886,7 +1897,13 @@ bool CWallet::CreateRawTransaction(const std::vector<std::pair<CScript, int64> >
         if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
             scriptChange.SetDestination(coinControl->destChange);
         else
-            return false;
+        {
+            // Reserve a new key pair from key pool
+            CPubKey vchPubKey;
+            assert(reservekey.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
+
+            scriptChange.SetDestination(vchPubKey.GetID());
+        }
 
         CTxOut newTxOut(nChange, scriptChange);
 
@@ -1900,10 +1917,24 @@ bool CWallet::CreateRawTransaction(const std::vector<std::pair<CScript, int64> >
             rawTx.vout.insert(position, newTxOut);
         }
     }
+    else
+        reservekey.ReturnKey();
 
     // Fill vin
     BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
         rawTx.vin.push_back(CTxIn(coin.first->GetHash(),coin.second));
+
+    if ( !isMultiSig )
+    {
+        // Sign
+        int nIn = 0;
+        BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
+            if (!SignSignature(*this, *coin.first, rawTx, nIn++))
+            {
+                strFailReason = _("Signing transaction failed");
+                return false;
+            }
+    }
     
     // Limit size
     unsigned int nBytes = ::GetSerializeSize(rawTx, SER_NETWORK, PROTOCOL_VERSION);
