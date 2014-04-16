@@ -20,6 +20,8 @@
 #include <QPainter>
 #include <QStandardItemModel>
 #include <QPalette>
+#include <QDesktopServices>
+#include <QUrl>
 
 using namespace json_spirit;
 
@@ -143,7 +145,8 @@ OverviewPage::OverviewPage(QWidget *parent) :
     labelFeeArray[12] = ui->labelFee12;labelFeeArray[13] = ui->labelFee13;labelFeeArray[14] = ui->labelFee14;labelFeeArray[15] = ui->labelFee15;
 
     Pal.setColor(QPalette::Background, QColor(210,210,210));
-    for ( int i = 0; i < 16; i += 2 )
+    int i;
+    for ( i = 0; i < 16; i += 2 )
     {
         labelRankArray[i+1]->setAutoFillBackground(true);
         labelRankArray[i+1]->setPalette(Pal);
@@ -152,6 +155,11 @@ OverviewPage::OverviewPage(QWidget *parent) :
         labelFeeArray[i+1]->setAutoFillBackground(true);
         labelFeeArray[i+1]->setPalette(Pal);
     }
+    for ( i = 0; i < 16; i ++ )
+    {
+        connect(labelMsgArray[i], SIGNAL(linkActivated(const QString&)), this, SLOT(handleAdLinkClicked(const QString&)));
+    }
+    
     connect(ui->btnAddAD, SIGNAL(clicked()), this, SLOT(addAdvertisement()));
 
     // init "out of sync" warning labels
@@ -286,6 +294,16 @@ void OverviewPage::addAdvertisement()
     if(dlg.exec())
     {
     }
+}
+
+void OverviewPage::handleAdLinkClicked(const QString &link)
+{
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Open Link", link,
+                                QMessageBox::Yes|QMessageBox::No);
+
+    if(reply == QMessageBox::Yes)
+        QDesktopServices::openUrl(QUrl(link));
 }
 
 void OverviewPage::updateAdvertisement()

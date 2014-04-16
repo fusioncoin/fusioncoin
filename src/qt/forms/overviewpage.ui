@@ -553,7 +553,7 @@
                <number>4</number>
               </property>
               <property name="openExternalLinks">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -575,7 +575,7 @@
                <number>4</number>
               </property>
               <property name="openExternalLinks">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -597,7 +597,7 @@
                <number>4</number>
               </property>
               <property name="openExternalLinks">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -619,7 +619,7 @@
                <number>4</number>
               </property>
               <property name="openExternalLinks">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -660,7 +660,7 @@
                <number>4</number>
               </property>
               <property name="openExternalLinks">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -714,7 +714,7 @@
                <number>4</number>
               </property>
               <property name="openExternalLinks">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -736,7 +736,7 @@
                <number>4</number>
               </property>
               <property name="openExternalLinks">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -758,7 +758,7 @@
                <number>4</number>
               </property>
               <property name="openExternalLinks">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -780,7 +780,7 @@
                <number>4</number>
               </property>
               <property name="openExternalLinks">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -802,7 +802,7 @@
                <number>4</number>
               </property>
               <property name="openExternalLinks">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -824,7 +824,7 @@
                <number>4</number>
               </property>
               <property name="openExternalLinks">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -846,7 +846,7 @@
                <number>4</number>
               </property>
               <property name="openExternalLinks">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -868,7 +868,7 @@
                <number>4</number>
               </property>
               <property name="openExternalLinks">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -890,7 +890,7 @@
                <number>4</number>
               </property>
               <property name="openExternalLinks">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -912,7 +912,7 @@
                <number>4</number>
               </property>
               <property name="openExternalLinks">
-               <bool>true</bool>
+               <bool>false</bool>
               </property>
              </widget>
             </item>

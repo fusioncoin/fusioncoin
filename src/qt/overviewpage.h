@@ -2,6 +2,7 @@
 #define OVERVIEWPAGE_H
 
 #include <QWidget>
+#include <QMessageBox>
 
 namespace Ui {
     class OverviewPage;
@@ -61,6 +62,7 @@ private slots:
     void handleTransactionClicked(const QModelIndex &index);
     void updateAlerts(const QString &warnings);
     void addAdvertisement();
+    void handleAdLinkClicked(const QString &link);    
 };
 
 #endif // OVERVIEWPAGE_H
