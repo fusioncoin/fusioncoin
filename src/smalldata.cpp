@@ -270,6 +270,9 @@ void CAdManager::processBlock(CBlock* pblock, int height)
     //printf("CAdManager::processBlock block=%s height=%d\n", pblock->GetHash().GetHex().c_str(), height);
     for ( int i = 0; i < pblock->vtx.size(); i ++ )
     {
+        if ( pblock->vtx[i].IsCoinBase() )
+            continue;
+
         std::string msg;
         bool isBroadcast;
         if ( GetTxMessage(pblock->vtx[i], msg, isBroadcast) )

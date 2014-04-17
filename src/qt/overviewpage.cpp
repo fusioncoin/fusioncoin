@@ -155,9 +155,12 @@ OverviewPage::OverviewPage(QWidget *parent) :
         labelFeeArray[i+1]->setAutoFillBackground(true);
         labelFeeArray[i+1]->setPalette(Pal);
     }
-    for ( i = 0; i < 16; i ++ )
+    for ( i = 1; i < 16; i ++ )
     {
         connect(labelMsgArray[i], SIGNAL(linkActivated(const QString&)), this, SLOT(handleAdLinkClicked(const QString&)));
+        labelMsgArray[i]->setText("");
+        labelFeeArray[i]->setText("");
+        labelRankArray[i]->setText("");
     }
     
     connect(ui->btnAddAD, SIGNAL(clicked()), this, SLOT(addAdvertisement()));
@@ -308,7 +311,7 @@ void OverviewPage::handleAdLinkClicked(const QString &link)
 
 void OverviewPage::updateAdvertisement()
 {
-    adManager.load();
+    //adManager.load();
     std::vector<CAdTx> adTxList;
     adManager.getAdList(adTxList);
 
@@ -322,11 +325,12 @@ void OverviewPage::updateAdvertisement()
             labelRankArray[i + 1]->setText(QString::number(nBestHeight - adTxList[i].nHeight));
         }
         else
-        {
-            labelMsgArray[i + 1]->setText("");
-            labelFeeArray[i + 1]->setText("");
-            labelRankArray[i + 1]->setText("");
-        }
+            break;
+        //{
+            //labelMsgArray[i + 1]->setText("");
+            //labelFeeArray[i + 1]->setText("");
+            //labelRankArray[i + 1]->setText("");
+        //}
     }
 }
 
