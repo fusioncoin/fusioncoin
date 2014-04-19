@@ -759,7 +759,10 @@ Value getauxblock(const Array& params, bool fHelp)
         Object result;
         result.push_back(Pair("target",   HexStr(BEGIN(hashTarget), END(hashTarget))));
         result.push_back(Pair("hash", pblock->GetHash().GetHex()));
-        result.push_back(Pair("chainid", GetDefaultPort()));
+        if ( fTestNet )
+            result.push_back(Pair("chainid", GetDefaultPort()));
+        else
+            result.push_back(Pair("chainid", 0));
         return result;
     }
     else

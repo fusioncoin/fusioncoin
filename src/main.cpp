@@ -2132,7 +2132,8 @@ bool CBlock::CheckBlock(CValidationState &state, bool fCheckPOW, bool fCheckMerk
     }
 
     // Check proof of work matches claimed amount
-    if ( fCheckPOW && isAuxBlock() && !auxpow.get()->Check(GetHash(), 0))
+    int chainid = fTestNet ? GetDefaultPort() : 0;
+    if ( fCheckPOW && isAuxBlock() && !auxpow.get()->Check(GetHash(), chainid))
         return state.DoS(50, error("CheckProofOfWork() : AUX POW is not valid"));
     
     if (fCheckPOW && !CheckProofOfWork(GetPoWHash(), nBits, GetAlgo()))

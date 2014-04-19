@@ -1534,7 +1534,8 @@ public:
         }
 
         // Check the header
-        if ( isAuxBlock() && !auxpow.get()->Check(GetHash(), 0))
+        int chainid = fTestNet ? GetDefaultPort() : 0;
+        if ( isAuxBlock() && !auxpow.get()->Check(GetHash(), chainid))
             return error("CBlock::ReadFromDisk() : AUX POW is not valid");
         
         if (!CheckProofOfWork(GetPoWHash(), nBits, GetAlgo()))
